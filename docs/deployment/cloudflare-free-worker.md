@@ -16,13 +16,13 @@ Official references: [Workers pricing and Free limits](https://developers.cloudf
 
 ## 1. Get the repository and validate the code
 
-Use the branch containing the Cloudflare work after its PR checks are green. From a terminal:
+Use the merged Cloudflare gateway code from `main`; do not fetch the historical PR branch. From a terminal:
 
 ```bash
 git clone https://github.com/pooya-labs/orbit.git
 cd orbit
-git fetch origin pull/136/head:feat/cloudflare-dual-runtime
-git checkout feat/cloudflare-dual-runtime
+git switch main
+git pull --ff-only origin main
 npm ci
 npm run test:cloudflare-gateway
 secret_file="$(mktemp)"
@@ -40,6 +40,8 @@ Workers Free enforces its 10 ms CPU ceiling automatically; this project does not
 ## 2. Prepare the original ORBIT origin
 
 The Cloudflare Worker is only an edge proxy. It needs the existing Go API behind Caddy, backed by PostgreSQL and Keycloak, with the existing private Collector/Prometheus/Loki/Tempo pipeline. Complete [the original free-only origin runbook](free-only-orbit.md) first.
+
+**Keep the two runtime scopes separate:** the stable portfolio v1 demo (GitHub Pages + Apps Script) does not need an OCI VM. The OCI instructions are an optional, separate post-v1 origin path needed only for the full Cloudflare runtime. Proceed only with resources explicitly labelled **Always Free eligible** and keep the project budget at $0/month. If the free capacity is unavailable, stop and wait or use hardware you already own; do not upgrade or choose a paid fallback.
 
 On the machine where the production repository and Docker Compose stack will run:
 
@@ -96,7 +98,7 @@ These are public browser configuration values. Never add the Worker gateway secr
 ## 6. Acceptance checks
 
 - [ ] Cloudflare Billing shows Workers Free; no Workers Paid subscription is active.
-- [ ] Worker settings do not show the Paid-only Standard usage model; if they do, stop and resolve the account-plan mismatch before continuing.
+- [ ] Cloudflare Billing → Subscriptions shows **Workers Free — Active** and no Workers Paid subscription. This Billing page is the account-plan source of truth. The Worker settings API field `usage_model: standard` is not, by itself, evidence of a paid subscription; leave it unchanged and do not set the legacy `bundled` value.
 - [ ] Worker uses the Workers Free platform CPU limit (10 ms by default) and has no unexpected bindings or custom Standard-only CPU override.
 - [ ] `/health/live` returns 200 and `/health/ready` reflects origin readiness.
 - [ ] Direct Caddy API access without the gateway secret returns 403.
@@ -109,4 +111,4 @@ Workers Free currently allows 100,000 requests/day and 10 ms CPU per invocation.
 
 ## Stop conditions
 
-Do not route real tenant traffic if the account remains on Workers Paid/Standard, `.env.production` is missing, the Go/Keycloak origin is not healthy, Caddy does not reject direct API bypass, or any auth/workspace-isolation check fails. Keep the Apps Script demo unchanged.
+Do not route real tenant traffic if Cloudflare Billing shows a Workers Paid subscription, `.env.production` is missing, the Go/Keycloak origin is not healthy, Caddy does not reject direct API bypass, or any auth/workspace-isolation check fails. Do not infer the subscription plan from the Worker's `usage_model` field. Keep the Apps Script demo unchanged.
