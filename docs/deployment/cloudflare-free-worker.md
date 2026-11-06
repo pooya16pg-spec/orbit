@@ -97,7 +97,6 @@ These are public browser configuration values. Never add the Worker gateway secr
 
 ## 6. Acceptance checks
 
-- [ ] Cloudflare Billing shows Workers Free; no Workers Paid subscription is active.
 - [ ] Cloudflare Billing → Subscriptions shows **Workers Free — Active** and no Workers Paid subscription. This Billing page is the account-plan source of truth. The Worker settings API field `usage_model: standard` is not, by itself, evidence of a paid subscription; leave it unchanged and do not set the legacy `bundled` value.
 - [ ] Worker uses the Workers Free platform CPU limit (10 ms by default) and has no unexpected bindings or custom Standard-only CPU override.
 - [ ] `/health/live` returns 200 and `/health/ready` reflects origin readiness.
